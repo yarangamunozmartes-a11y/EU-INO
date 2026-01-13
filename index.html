@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MiMarket - Compra y Vende en tu Zona</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plataforma para comprar y vender productos en tu provincia y distrito">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Pantalla de Inicio -->
+<section id="splash">
+    <div class="splash-content">
+        <h1>MiMarket</h1>
+        <p>Conectando compradores y vendedores locales</p>
+    </div>
+</section>
+
+<!-- Aplicación Principal -->
+<main id="app" style="display: none;">
+
+    <!-- Header -->
+    <header class="top-bar">
+        <h1 class="logo">MiMarket</h1>
+        <div class="acciones">
+            <button id="btn-comprar" class="btn-activo">Comprar</button>
+            <button id="btn-vender">Vender</button>
+            <button id="btn-admin" style="display:none;">Admin</button>
+        </div>
+    </header>
+
+    <!-- Sección de Busqueda (Modo Comprador) -->
+    <section id="busqueda" class="seccion-activa">
+        <div class="buscador-header">
+            <h2>¿Qué estás buscando?</h2>
+            <p class="subtitulo">Busca y encuentra productos cerca de ti</p>
+        </div>
+        
+        <form id="form-busqueda">
+            <div class="input-group">
+                <input type="text" id="buscar-producto" placeholder="Ej: Bicicleta, Mueble, Electrodoméstico" required>
+                <div class="select-group">
+                    <select id="provincia" required>
+                        <option value="">Selecciona Provincia</option>
+                        <option value="Lima">Lima</option>
+                        <option value="Arequipa">Arequipa</option>
+                        <option value="Cusco">Cusco</option>
+                        <option value="Trujillo">Trujillo</option>
+                        <option value="Chiclayo">Chiclayo</option>
+                    </select>
+                    
+                    <select id="distrito" required>
+                        <option value="">Selecciona Distrito</option>
+                        <option value="Miraflores">Miraflores</option>
+                        <option value="San Isidro">San Isidro</option>
+                        <option value="Surco">Surco</option>
+                        <option value="La Molina">La Molina</option>
+                        <option value="Barranco">Barranco</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-buscar">🔍 Buscar Productos</button>
+        </form>
+        
+        <div class="mensaje-ayuda">
+            <p>• Busca productos en tu zona</p>
+            <p>• Contacta directamente al vendedor</p>
+            <p>• Acuerda precios y entregas</p>
+        </div>
+    </section>
+
+    <!-- Resultados de Busqueda -->
+    <section id="resultados">
+        <h3>Productos encontrados</h3>
+        <div id="lista-resultados">
+            <!-- Los productos se cargarán aquí dinámicamente -->
+        </div>
+        <p id="mensaje-vacio" class="mensaje-vacio">Busca productos en tu provincia y distrito para ver resultados</p>
+    </section>
+
+    <!-- Video Tutorial para Vendedores -->
+    <section id="video-tutorial" style="display: none;">
+        <h2>¿Cómo vender en MiMarket?</h2>
+        <div class="video-container">
+            <div class="video-placeholder">
+                <p>🎥 Video tutorial aquí</p>
+                <p>En este video aprenderás a publicar tus productos</p>
+            </div>
+        </div>
+        <button id="btn-saltar-video" class="btn-secundario">Saltar y continuar</button>
+    </section>
+
+    <!-- Registro de Vendedor -->
+    <section id="registro-vendedor" style="display: none;">
+        <h2>Regístrate como Vendedor</h2>
+        <p class="subtitulo">Completa tus datos para comenzar a vender</p>
+        
+        <form id="form-vendedor">
+            <div class="form-group">
+                <label for="nombre">Nombre completo *</label>
+                <input type="text" id="nombre" placeholder="Tu nombre completo" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Correo electrónico *</label>
+                <input type="email" id="email" placeholder="tucorreo@ejemplo.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="provincia-vendedor">Provincia *</label>
+                <select id="provincia-vendedor" required>
+                    <option value="">Selecciona tu provincia</option>
+                    <option value="Lima">Lima</option>
+                    <option value="Arequipa">Arequipa</option>
+                    <option value="Cusco">Cusco</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="distrito-vendedor">Distrito *</label>
+                <select id="distrito-vendedor" required>
+                    <option value="">Selecciona tu distrito</option>
+                    <option value="Miraflores">Miraflores</option>
+                    <option value="San Isidro">San Isidro</option>
+                    <option value="Surco">Surco</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefono">Teléfono / WhatsApp *</label>
+                <input type="tel" id="telefono" placeholder="Ej: 999888777" required>
+            </div>
+            
+            <div class="form-group">
+                <label>¿Cómo quieres ser contactado? *</label>
+                <div class="contacto-opciones">
+                    <label><input type="checkbox" id="contacto-whatsapp" checked> WhatsApp</label>
+                    <label><input type="checkbox" id="contacto-llamada" checked> Llamada</label>
+                </div>
+            </div>
+            
+            <div class="terminos">
+                <input type="checkbox" id="acepto-terminos" required>
+                <label for="acepto-terminos">Acepto los términos y condiciones</label>
+            </div>
+            
+            <button type="submit" class="btn-registro">📝 Registrarme como Vendedor</button>
+        </form>
+        
+        <div class="info-pago">
+            <p><strong>💰 Primera publicación GRATIS</strong></p>
+            <p>Publicaciones adicionales: S/ 5.00 por producto</p>
+            <p>📱 Pago por Yape al número: <strong>999-888-777</strong></p>
+            <small>Después de registrar tu primer producto, deberás pagar para publicar más</small>
+        </div>
+    </section>
+
+    <!-- Perfil del Vendedor -->
+    <section id="perfil-vendedor" style="display: none;">
+        <div class="perfil-header">
+            <h2 id="perfil-nombre">Nombre del Vendedor</h2>
+            <div class="perfil-info">
+                <p id="perfil-localidad">📍 Provincia, Distrito</p>
+                <p id="perfil-telefono">📱 Teléfono: 999888777</p>
+                <p id="perfil-email">✉️ Email: ejemplo@correo.com</p>
+            </div>
+            <div class="estado-cuenta">
+                <p id="estado-publicaciones">📦 Publicaciones disponibles: <span id="contador-publicaciones">1</span></p>
+                <p id="mensaje-pago" style="display: none;">⚠️ Debes pagar S/ 5 para seguir vendiendo</p>
+            </div>
+        </div>
+
+        <!-- Botón para pagar (aparece cuando no hay publicaciones) -->
+        <div id="seccion-pago" style="display: none;">
+            <h3>💳 Pagar para Publicar</h3>
+            <div class="info-yape">
+                <p><strong>Realiza un pago de S/ 5.00 por Yape al número:</strong></p>
+                <p class="yape-numero">999-888-777</p>
+                <p>Envía el comprobante al WhatsApp del administrador</p>
+                <button id="btn-realizar-pago" class="btn-pago">✅ Ya pagué, habilitar mi cuenta</button>
+                <button id="btn-enviar-comprobante" class="btn-whatsapp">📤 Enviar comprobante por WhatsApp</button>
+            </div>
+        </div>
+
+        <!-- Formulario para nuevo producto -->
+        <div id="formulario-producto" style="display: none;">
+            <h3>➕ Publicar Nuevo Producto</h3>
+            <form id="form-producto">
+                <div class="form-group">
+                    <label for="prod-nombre">Nombre del Producto *</label>
+                    <input type="text" id="prod-nombre" placeholder="Ej: Bicicleta mountain bike 29"" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prod-precio">Precio (S/) *</label>
+                    <input type="number" id="prod-precio" placeholder="Ej: 350" min="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prod-categoria">Categoría *</label>
+                    <select id="prod-categoria" required>
+                        <option value="">Selecciona categoría</option>
+                        <option value="Electrodomésticos">Electrodomésticos</option>
+                        <option value="Vehículos">Vehículos</option>
+                        <option value="Muebles">Muebles</option>
+                        <option value="Electrónica">Electrónica</option>
+                        <option value="Deportes">Deportes</option>
+                        <option value="Ropa y Calzado">Ropa y Calzado</option>
+                        <option value="Hogar">Hogar</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prod-descripcion">Descripción *</label>
+                    <textarea id="prod-descripcion" placeholder="Describe tu producto en detalle..." rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prod-estado">Estado del producto *</label>
+                    <select id="prod-estado" required>
+                        <option value="Nuevo">Nuevo</option>
+                        <option value="Semi nuevo">Semi nuevo</option>
+                        <option value="Usado">Usado</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subir fotos del producto (Máximo 2 fotos)</label>
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-placeholder">
+                            <p>📷 Arrastra o haz clic para subir fotos</p>
+                            <p class="upload-info">Formatos: JPG, PNG (Máx 2MB cada una)</p>
+                        </div>
+                        <input type="file" id="fotos-producto" accept="image/*" multiple max="2" style="display: none;">
+                    </div>
+                    <div id="preview-fotos" class="preview-fotos"></div>
+                    <small class="upload-hint">Solo se permiten hasta 2 fotos por producto</small>
+                </div>
+                
+                <div class="form-botones">
+                    <button type="submit" class="btn-publicar">✅ Publicar Producto</button>
+                    <button type="button" id="btn-cancelar" class="btn-cancelar">❌ Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de productos del vendedor -->
+        <div class="mis-productos">
+            <div class="productos-header">
+                <h3>📦 Mis Productos Publicados</h3>
+                <button id="btn-nuevo-producto" class="btn-nuevo">➕ Agregar Producto</button>
+            </div>
+            
+            <div id="lista-productos">
+                <!-- Los productos se cargarán aquí -->
+            </div>
+        </div>
+        
+        <!-- Estadísticas -->
+        <div class="estadisticas">
+            <h3>📊 Estadísticas de tu tienda</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <p class="stat-numero" id="vistas-totales">0</p>
+                    <p class="stat-label">Vistas Totales</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-numero" id="productos-activos">0</p>
+                    <p class="stat-label">Productos Activos</p>
+                </div>
+                <div class="stat-item">
+                    <p class="stat-numero" id="contactos-recibidos">0</p>
+                    <p class="stat-label">Contactos Recibidos</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Panel Admin (solo visible con credenciales) -->
+    <section id="panel-admin" style="display: none;">
+        <div class="admin-header">
+            <h2>🔧 Panel de Administración</h2>
+            <button id="btn-cerrar-admin" class="btn-cancelar">Cerrar Sesión Admin</button>
+        </div>
+        
+        <!-- Login Admin -->
+        <div id="login-admin">
+            <h3>Acceso Administrador</h3>
+            <div class="form-group">
+                <label for="admin-usuario">Usuario</label>
+                <input type="text" id="admin-usuario" placeholder="admin">
+            </div>
+            <div class="form-group">
+                <label for="admin-password">Contraseña</label>
+                <input type="password" id="admin-password" placeholder="••••••••">
+            </div>
+            <button id="btn-login-admin" class="btn-publicar">🔐 Ingresar</button>
+        </div>
+        
+        <!-- Panel Principal Admin -->
+        <div id="contenido-admin" style="display: none;">
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h4>💰 Pagos Pendientes</h4>
+                    <p class="stat-number" id="pagos-pendientes">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>👥 Vendedores</h4>
+                    <p class="stat-number" id="total-vendedores">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>📦 Productos</h4>
+                    <p class="stat-number" id="total-productos">0</p>
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>📋 Vendedores Pendientes de Pago</h3>
+                <div id="lista-pagos-pendientes">
+                    <!-- Lista de vendedores pendientes -->
+                </div>
+            </div>
+            
+            <div class="admin-section">
+                <h3>✅ Habilitar Pago de Vendedor</h3>
+                <div class="form-group">
+                    <label for="codigo-vendedor">Código del Vendedor</label>
+                    <input type="text" id="codigo-vendedor" placeholder="ID del vendedor">
+                </div>
+                <div class="form-group">
+                    <label for="comprobante-pago">Comprobante de Pago</label>
+                    <input type="text" id="comprobante-pago" placeholder="Número de comprobante">
+                </div>
+                <button id="btn-habilitar-pago" class="btn-publicar">✅ Habilitar Vendedor</button>
+            </div>
+            
+            <div class="admin-section">
+                <h3>📱 Configuración de Pago Yape</h3>
+                <div class="form-group">
+                    <label for="yape-numero">Número de Yape</label>
+                    <input type="text" id="yape-numero" placeholder="999-888-777" value="999-888-777">
+                </div>
+                <div class="form-group">
+                    <label for="yape-qr">Código QR (URL de la imagen)</label>
+                    <input type="text" id="yape-qr" placeholder="https://ejemplo.com/qr-yape.jpg">
+                </div>
+                <button id="btn-guardar-yape" class="btn-publicar">💾 Guardar Configuración Yape</button>
+            </div>
+            
+            <div class="admin-section">
+                <h3>📊 Todos los Vendedores</h3>
+                <div id="lista-todos-vendedores">
+                    <!-- Lista completa de vendedores -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- Modal para Contactar -->
+<div id="modal-contacto" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="modal-fotos" class="modal-fotos"></div>
+        <h3 id="modal-producto-nombre"></h3>
+        <p class="modal-precio" id="modal-producto-precio"></p>
+        <p class="modal-descripcion" id="modal-producto-descripcion"></p>
+        
+        <div class="modal-info-vendedor">
+            <p><strong>👤 Vendedor:</strong> <span id="modal-vendedor-nombre"></span></p>
+            <p><strong>📍 Ubicación:</strong> <span id="modal-vendedor-ubicacion"></span></p>
+            <p><strong>📱 Contacto:</strong> <span id="modal-vendedor-telefono"></span></p>
+            <p><strong>📅 Publicado:</strong> <span id="modal-producto-fecha"></span></p>
+        </div>
+        
+        <div class="modal-botones">
+            <button id="btn-llamar" class="btn-llamar">📞 Llamar Ahora</button>
+            <button id="btn-whatsapp" class="btn-whatsapp">💬 Enviar WhatsApp</button>
+        </div>
+        <p class="modal-consejo">💡 <strong>Consejo:</strong> Acuerda el precio exacto y días de entrega directamente con el vendedor.</p>
+    </div>
+</div>
+
+<script src="app.js">
+
+// PRUEBA: Insertar un dato de prueba
+async function pruebaConexion() {
+    try {
+        const { data, error } = await db
+            .from('items')
+            .insert([{ texto: '✅ Prueba desde mi PWA' }])
+            .select();
+        
+        if (error) {
+            console.error('❌ Error:', error.message);
+            return;
+        }
+        
+        console.log('✅ Dato insertado:', data[0]);
+        alert('¡Conexión exitosa! Revisa Supabase Table Editor');
+    } catch (err) {
+        console.error('❌ Error de conexión:', err);
+    }
+}
+
+// Ejecutar al cargar la página
+document.addEventListener('DOMContentLoaded', pruebaConexion);
+
+</script>
+</body>
+</html>
+
+
