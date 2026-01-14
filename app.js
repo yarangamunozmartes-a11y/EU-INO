@@ -16,6 +16,55 @@ window.addEventListener("load", () => {
         } catch (error) {
             console.warn('⚠️ Error conectando a Supabase, usando modo offline');
         }
+        // ============================================
+// REGISTRAR SERVICE WORKER PARA PWA
+// ============================================
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/EU-INO/service-worker.js')
+      .then(registration => {
+        console.log('✅ Service Worker registrado:', registration.scope);
+        
+        // Verificar actualizaciones
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('🔄 Nuevo Service Worker encontrado');
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Nueva versión disponible
+              if (confirm('¡Nueva versión disponible! ¿Recargar para actualizar?')) {
+                window.location.reload();
+              }
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.log('❌ Error registrando Service Worker:', error);
+      });
+  });
+  
+  // Manejar actualizaciones
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
+// Detectar si es PWA instalada
+const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+              window.navigator.standalone ||
+              document.referrer.includes('android-app://');
+              
+if (isPWA) {
+  console.log('📱 App ejecutándose como PWA instalada');
+  document.documentElement.classList.add('pwa-mode');
+}
     } else {
         // Configuración directa si falla el otro método
         const SUPABASE_URL = 'https://vxzvnquhuebakzscfjvg.supabase.co';
@@ -1803,4 +1852,5 @@ window.addEventListener("load", () => {
             estadoConexion.style.background = '#f56565';
         });
     }, 1000);
+
 });
