@@ -399,8 +399,54 @@
     </div>
 </div>
 
+
+<!-- Botón de instalación PWA -->
+<div id="installPrompt" class="hidden">
+  <p>📱 Instalar MiMarket como app</p>
+  <button id="installButton" class="install-btn">Instalar</button>
+  <button id="cancelInstall" class="install-btn secondary">Ahora no</button>
+</div>
+    
 <script src="app.js">
 
+// Detectar si se puede instalar como PWA
+let deferredPrompt;
+const installPrompt = document.getElementById('installPrompt');
+const installButton = document.getElementById('installButton');
+const cancelButton = document.getElementById('cancelInstall');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevenir que Chrome muestre el prompt automático
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Mostrar nuestro botón de instalación
+  installPrompt.classList.remove('hidden');
+  
+  // Ocultar después de 30 segundos
+  setTimeout(() => {
+    installPrompt.classList.add('hidden');
+  }, 30000);
+});
+
+installButton.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  
+  if (outcome === 'accepted') {
+    console.log('✅ Usuario instaló la PWA');
+  }
+  
+  deferredPrompt = null;
+  installPrompt.classList.add('hidden');
+});
+
+cancelButton.addEventListener('click', () => {
+  installPrompt.classList.add('hidden');
+});
+    
 // PRUEBA: Insertar un dato de prueba
 async function pruebaConexion() {
     try {
@@ -427,6 +473,7 @@ document.addEventListener('DOMContentLoaded', pruebaConexion);
 </script>
 </body>
 </html>
+
 
 
 
