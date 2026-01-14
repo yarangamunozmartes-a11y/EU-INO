@@ -1,79 +1,229 @@
-window.addEventListener("load", () => {
-    // ========== CONFIGURACIÓN SUPABASE ==========
-    let db = null;
-    let supabaseConectado = false;
-    let datosPendientesSync = JSON.parse(localStorage.getItem('datosPendientesSync')) || [];
-    
-    // Intentar conectar a Supabase
-    if (window.supabase && window.SUPABASE_CONFIG) {
-        try {
-            db = window.supabase.createClient(
-                window.SUPABASE_CONFIG.url,
-                window.SUPABASE_CONFIG.anonKey
-            );
-            supabaseConectado = true;
-            console.log('✅ Supabase conectado desde supabase-config.js');
-        } catch (error) {
-            console.warn('⚠️ Error conectando a Supabase, usando modo offline');
-        }
-        // ============================================
-// REGISTRAR SERVICE WORKER PARA PWA
+// ============================================
+// CONFIGURACIÓN SUPABASE Y PWA
 // ============================================
 
+const SUPABASE_URL = 'https://vxzvnquhuebakzscfjvg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4enZucXVodWViYWt6c2NmanZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNzU2NjksImV4cCI6MjA4Mzg1MTY2OX0.YFQj-JCCnz8Q5oE4ajBbf9jEBu4h1fyjRXloX4SRZ2A';
+
+let db = null;
+let supabaseConectado = false;
+
+// ============================================
+// REGISTRAR PWA Y SERVICE WORKER
+// ============================================
+
+// Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/EU-INO/service-worker.js')
-      .then(registration => {
+  window.addEventListener('load', function() {
+    const swUrl = '/EU-INO/service-worker.js';
+    
+    navigator.serviceWorker.register(swUrl)
+      .then(function(registration) {
         console.log('✅ Service Worker registrado:', registration.scope);
         
-        // Verificar actualizaciones
+        // Escuchar actualizaciones
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          console.log('🔄 Nuevo Service Worker encontrado');
+          console.log('🔄 Nueva versión del Service Worker encontrada');
           
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Nueva versión disponible
-              if (confirm('¡Nueva versión disponible! ¿Recargar para actualizar?')) {
-                window.location.reload();
-              }
+              console.log('📦 Nueva versión disponible');
+              showUpdateNotification();
             }
           });
         });
+        
+        // Forzar actualización periódica
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // Cada hora
       })
-      .catch(error => {
+      .catch(function(error) {
         console.log('❌ Error registrando Service Worker:', error);
       });
   });
-  
-  // Manejar actualizaciones
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!refreshing) {
-      refreshing = true;
-      window.location.reload();
-    }
-  });
 }
 
-// Detectar si es PWA instalada
-const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-              window.navigator.standalone ||
-              document.referrer.includes('android-app://');
-              
-if (isPWA) {
-  console.log('📱 App ejecutándose como PWA instalada');
-  document.documentElement.classList.add('pwa-mode');
+// Función para mostrar notificación de actualización
+function showUpdateNotification() {
+  const updateDiv = document.createElement('div');
+  updateDiv.id = 'update-notification';
+  updateDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #4f46e5;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 9999;
+    max-width: 300px;
+  `;
+  
+  updateDiv.innerHTML = `
+    <p style="margin: 0 0 10px 0; font-weight: bold;">🔄 Nueva versión disponible</p>
+    <button id="reload-btn" style="background: white; color: #4f46e5; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Actualizar ahora</button>
+    <button id="close-update" style="background: transparent; color: white; border: 1px solid white; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 10px;">Más tarde</button>
+  `;
+  
+  document.body.appendChild(updateDiv);
+  
+  document.getElementById('reload-btn').onclick = () => {
+    window.location.reload();
+  };
+  
+  document.getElementById('close-update').onclick = () => {
+    updateDiv.remove();
+  };
+  
+  // Auto-ocultar después de 30 segundos
+  setTimeout(() => {
+    if (document.getElementById('update-notification')) {
+      updateDiv.remove();
+    }
+  }, 30000);
 }
-    } else {
-        // Configuración directa si falla el otro método
-        const SUPABASE_URL = 'https://vxzvnquhuebakzscfjvg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4enZucXVodWViYWt6c2NmanZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNzU2NjksImV4cCI6MjA4Mzg1MTY2OX0.YFQj-JCCnz8Q5oE4ajBbf9jEBu4h1fyjRXloX4SRZ2A';
-        
-        if (window.supabase) {
+
+// Detectar si ya está instalada como PWA
+function checkPWAInstallation() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      window.navigator.standalone ||
+                      document.referrer.includes('android-app://');
+  
+  if (isStandalone) {
+    console.log('📱 Ejecutándose como PWA instalada');
+    document.documentElement.classList.add('pwa-mode');
+    return true;
+  }
+  return false;
+}
+
+// Mostrar botón de instalación PWA
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Mostrar botón después de 5 segundos
+  setTimeout(showInstallButton, 5000);
+});
+
+function showInstallButton() {
+  if (!deferredPrompt || checkPWAInstallation()) return;
+  
+  const installBtn = document.createElement('button');
+  installBtn.id = 'install-pwa-btn';
+  installBtn.innerHTML = '📱 Instalar MiMarket App';
+  installBtn.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    z-index: 1000;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+  `;
+  
+  // Agregar animación CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4); }
+      100% { transform: scale(1); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  installBtn.onclick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('✅ Usuario instaló la app');
+      installBtn.remove();
+      
+      // Mostrar mensaje de éxito
+      showNotification('✅ App instalada correctamente');
+    }
+    
+    deferredPrompt = null;
+  };
+  
+  // Solo agregar si no existe ya
+  if (!document.getElementById('install-pwa-btn')) {
+    document.body.appendChild(installBtn);
+    
+    // Auto-ocultar después de 30 segundos
+    setTimeout(() => {
+      if (installBtn.parentNode) {
+        installBtn.style.opacity = '0';
+        setTimeout(() => installBtn.remove(), 500);
+      }
+    }, 30000);
+  }
+}
+
+// Función de notificación
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'success' ? '#48bb78' : '#f56565'};
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    animation: slideDown 0.3s ease;
+  `;
+  
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.animation = 'slideUp 0.3s ease';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 3000);
+}
+
+// Verificar PWA al cargar
+window.addEventListener('load', () => {
+  checkPWAInstallation();
+});
+
+// ============================================
+// CONFIGURACIÓN SUPABASE (continuación)
+// ============================================
+
+window.addEventListener("load", () => {
+    // Intentar conectar a Supabase
+    if (window.supabase) {
+        try {
             db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             supabaseConectado = true;
-            console.log('✅ Supabase conectado directamente');
+            console.log('✅ Supabase conectado');
+        } catch (error) {
+            console.warn('⚠️ Error conectando a Supabase, usando modo offline');
         }
     }
     
@@ -84,6 +234,7 @@ if (isPWA) {
     // DATOS VACÍOS - Sin ejemplos
     let productosGlobales = JSON.parse(localStorage.getItem('productosGlobales')) || [];
     let vendedoresGlobales = JSON.parse(localStorage.getItem('vendedoresGlobales')) || [];
+    let datosPendientesSync = JSON.parse(localStorage.getItem('datosPendientesSync')) || [];
     
     // CONFIGURACIÓN ADMIN - Credenciales ocultas
     let adminConfig = JSON.parse(localStorage.getItem('adminConfig')) || {
@@ -302,7 +453,7 @@ if (isPWA) {
             
             // Notificar al usuario
             if (exitosos.length > 0) {
-                mostrarNotificacion(`✅ ${exitosos.length} datos sincronizados con la nube`);
+                showNotification(`✅ ${exitosos.length} datos sincronizados con la nube`);
             }
         }
         
@@ -756,7 +907,7 @@ if (isPWA) {
     // Función para copiar código
     window.copiarCodigo = function(codigo) {
         navigator.clipboard.writeText(codigo)
-            .then(() => mostrarNotificacion("✅ Código copiado al portapapeles"))
+            .then(() => showNotification("✅ Código copiado al portapapeles"))
             .catch(err => console.error('Error copiando:', err));
     };
 
@@ -861,7 +1012,7 @@ if (isPWA) {
 
         // Actualizar vista
         mostrarPerfil();
-        mostrarNotificacion("✅ Producto publicado exitosamente!");
+        showNotification("✅ Producto publicado exitosamente!");
     };
 
     function renderProductosVendedor() {
@@ -1054,7 +1205,7 @@ if (isPWA) {
                 img.className = "modal-foto";
                 img.alt = `Foto ${index + 1} de ${producto.nombre}`;
                 img.onerror = function() {
-                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y3ZmFmYyIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0iIzcxODA5NiI+U2luIGZvdG88L3RleHQ+PC9zdmc+';
+                    this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2Y3ZmFmYyIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpplM9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSIgZmlsbD0iIzcxODA5NiI+U2luIGZvdG88L3RleHQ+PC9zdmc+';
                 };
                 fotosContainer.appendChild(img);
             });
@@ -1166,7 +1317,7 @@ if (isPWA) {
         
         // Mostrar datos pendientes de sincronización
         if (datosPendientesSync.length > 0) {
-            mostrarNotificacion(`🔄 ${datosPendientesSync.length} datos pendientes de sincronización`);
+            showNotification(`🔄 ${datosPendientesSync.length} datos pendientes de sincronización`);
         }
         
         // Cargar configuración Yape desde Supabase si está disponible
@@ -1378,7 +1529,7 @@ if (isPWA) {
                     usuario: 'admin'
                 }]);
                 
-                mostrarNotificacion(`✅ Vendedor habilitado en Supabase`);
+                showNotification(`✅ Vendedor habilitado en Supabase`);
                 
             } catch (error) {
                 console.error('Error habilitando vendedor:', error);
@@ -1413,7 +1564,7 @@ if (isPWA) {
                     usuario: 'admin'
                 }]);
                 
-                mostrarNotificacion("✅ Vendedor rechazado en Supabase");
+                showNotification("✅ Vendedor rechazado en Supabase");
                 
             } catch (error) {
                 console.error('Error rechazando vendedor:', error);
@@ -1455,7 +1606,7 @@ if (isPWA) {
                     usuario: 'admin'
                 }]);
                 
-                mostrarNotificacion("✅ Configuración de Yape guardada en la nube");
+                showNotification("✅ Configuración de Yape guardada en la nube");
                 return;
                 
             } catch (error) {
@@ -1463,7 +1614,7 @@ if (isPWA) {
             }
         }
         
-        mostrarNotificacion("✅ Configuración de Yape guardada localmente");
+        showNotification("✅ Configuración de Yape guardada localmente");
     };
     
     // Ver productos de un vendedor
@@ -1556,11 +1707,11 @@ if (isPWA) {
                     
                     if (error) throw error;
                     
-                    mostrarNotificacion("✅ Vendedor actualizado en Supabase");
+                    showNotification("✅ Vendedor actualizado en Supabase");
                     
                 } catch (error) {
                     console.error('Error actualizando:', error);
-                    mostrarNotificacion("✅ Vendedor actualizado localmente");
+                    showNotification("✅ Vendedor actualizado localmente");
                 }
             }
             
@@ -1595,7 +1746,7 @@ if (isPWA) {
                 localStorage.setItem("vendedor", JSON.stringify(vendedorLocal));
             }
             
-            mostrarNotificacion(`✅ Vendedor ${vendedoresGlobales[vendedorIndex].nombre} habilitado con éxito`);
+            showNotification(`✅ Vendedor ${vendedoresGlobales[vendedorIndex].nombre} habilitado con éxito`);
             cargarDatosAdmin();
         }
     };
@@ -1679,7 +1830,7 @@ if (isPWA) {
         
         // Actualizar vista
         mostrarPerfil();
-        mostrarNotificacion("✅ Producto eliminado exitosamente");
+        showNotification("✅ Producto eliminado exitosamente");
     };
 
     // ========== FUNCIONES AUXILIARES MEJORADAS ==========
@@ -1696,81 +1847,12 @@ if (isPWA) {
         elemento.style.display = "none";
     }
     
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(mensaje, tipo = 'success') {
-        const notificacion = document.createElement('div');
-        notificacion.className = `notificacion notificacion-${tipo}`;
-        notificacion.innerHTML = `
-            <div class="notificacion-contenido">
-                <span class="notificacion-texto">${mensaje}</span>
-                <button class="notificacion-cerrar" onclick="this.parentElement.parentElement.remove()">×</button>
-            </div>
-        `;
-        
-        // Estilos para la notificación
-        notificacion.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${tipo === 'success' ? '#48bb78' : '#f56565'};
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 9999;
-            min-width: 300px;
-            max-width: 400px;
-            animation: slideIn 0.3s ease;
-        `;
-        
-        document.body.appendChild(notificacion);
-        
-        // Auto-eliminar después de 5 segundos
-        setTimeout(() => {
-            if (notificacion.parentNode) {
-                notificacion.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    if (notificacion.parentNode) {
-                        notificacion.parentNode.removeChild(notificacion);
-                    }
-                }, 300);
-            }
-        }, 5000);
-    }
-    
-    // Agregar estilos CSS para animaciones
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .notificacion-contenido {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .notificacion-cerrar {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-    `;
-    document.head.appendChild(style);
-
     // ========== SISTEMA DE SINCRONIZACIÓN AUTOMÁTICA ==========
     
     // Detectar cambios en la conexión
     window.addEventListener('online', () => {
         console.log('🌐 Conexión a internet restaurada');
-        mostrarNotificacion('🌐 Conexión restaurada - Sincronizando datos...');
+        showNotification('🌐 Conexión restaurada - Sincronizando datos...');
         
         // Intentar sincronizar datos pendientes
         setTimeout(() => {
@@ -1780,7 +1862,7 @@ if (isPWA) {
     
     window.addEventListener('offline', () => {
         console.log('📴 Sin conexión a internet');
-        mostrarNotificacion('📴 Modo offline - Los datos se guardarán localmente', 'warning');
+        showNotification('📴 Modo offline - Los datos se guardarán localmente', 'warning');
     });
     
     // Sincronizar automáticamente cada 5 minutos si hay datos pendientes
