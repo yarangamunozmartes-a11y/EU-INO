@@ -1936,3 +1936,315 @@ window.addEventListener("load", () => {
     }, 1000);
 });
 
+
+// ========== FUNCIONES FALTANTES PARA COMPLETAR ==========
+
+// 1. Función para sincronizar datos pendientes automáticamente
+async function autoSyncPendingData() {
+  if (!window.db || !supabaseConectado) return;
+  
+  const pending = JSON.parse(localStorage.getItem('datosPendientesSync')) || [];
+  
+  if (pending.length === 0) return;
+  
+  console.log(`🔄 Sincronizando ${pending.length} datos pendientes...`);
+  
+  for (const item of pending) {
+    try {
+      if (item.tipo === 'vendedor') {
+        await guardarVendedorSupabase(item.datos);
+      } else if (item.tipo === 'producto') {
+        await guardarProductoSupabase(item.datos, item.datos.vendedor_id_supabase);
+      }
+      
+      // Eliminar del array de pendientes
+      pending.splice(pending.indexOf(item), 1);
+    } catch (error) {
+      console.error(`Error sincronizando ${item.tipo}:`, error);
+    }
+  }
+  
+  localStorage.setItem('datosPendientesSync', JSON.stringify(pending));
+  showNotification(`✅ ${pending.length} datos sincronizados`);
+}
+
+// 2. Función para comprimir imágenes antes de subir
+async function compressImage(file, maxWidth = 1200, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calcular nuevas dimensiones
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convertir a JPEG con calidad ajustable
+        canvas.toBlob(blob => {
+          resolve(blob);
+        }, 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// 3. Función para validar formularios
+function validateForm(formData, rules) {
+  const errors = [];
+  
+  Object.keys(rules).forEach(field => {
+    const value = formData[field];
+    const rule = rules[field];
+    
+    if (rule.required && !value) {
+      errors.push(`El campo ${rule.label} es requerido`);
+    }
+    
+    if (rule.type === 'email' && value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        errors.push('El email no es válido');
+      }
+    }
+    
+    if (rule.type === 'tel' && value) {
+      const phoneRegex = /^[0-9]{9,12}$/;
+      if (!phoneRegex.test(value.replace(/\D/g, ''))) {
+        errors.push('El teléfono no es válido');
+      }
+    }
+    
+    if (rule.min && value && value.length < rule.min) {
+      errors.push(`El campo ${rule.label} debe tener al menos ${rule.min} caracteres`);
+    }
+  });
+  
+  return errors;
+}
+
+// 4. Función para mostrar estadísticas detalladas
+function showDetailedStats(vendedorId) {
+  const vendedor = vendedoresGlobales.find(v => v.id === vendedorId);
+  if (!vendedor) return;
+  
+  const productos = productosGlobales.filter(p => p.vendedorId === vendedorId);
+  const totalVistas = productos.reduce((sum, p) => sum + (p.vistas || 0), 0);
+  const totalProductos = productos.length;
+  
+  const statsHTML = `
+    <div class="stats-details">
+      <h3>📊 Estadísticas Detalladas</h3>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <span class="stat-number">${totalVistas}</span>
+          <span class="stat-label">Vistas Totales</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">${totalProductos}</span>
+          <span class="stat-label">Productos Activos</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">${vendedor.contactosRecibidos || 0}</span>
+          <span class="stat-label">Contactos Recibidos</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">${vendedor.publicacionesDisponibles}</span>
+          <span class="stat-label">Publicaciones Disponibles</span>
+        </div>
+      </div>
+      <div class="productos-list">
+        <h4>📦 Productos Publicados</h4>
+        ${productos.map(p => `
+          <div class="producto-stats">
+            <strong>${p.nombre}</strong>
+            <span>Vistas: ${p.vistas || 0}</span>
+            <span>Publicado: ${new Date(p.fechaPublicacion).toLocaleDateString()}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-stats';
+  modal.innerHTML = statsHTML;
+  document.body.appendChild(modal);
+  
+  // Agregar estilos
+  const style = document.createElement('style');
+  style.textContent = `
+    .modal-stats {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      z-index: 1001;
+      max-width: 500px;
+      width: 90%;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .stat-box {
+      text-align: center;
+      padding: 15px;
+      background: #f7fafc;
+      border-radius: 8px;
+    }
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #4f46e5;
+      display: block;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: #718096;
+    }
+    .productos-list {
+      margin-top: 20px;
+    }
+    .producto-stats {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// 5. Función para exportar datos (backup)
+function exportData() {
+  const data = {
+    vendedores: vendedoresGlobales,
+    productos: productosGlobales,
+    config: adminConfig,
+    fechaExportacion: new Date().toISOString(),
+    version: '1.0.0'
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mimarket-backup-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showNotification('✅ Datos exportados correctamente');
+}
+
+// 6. Función para importar datos
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      
+      if (data.vendedores) vendedoresGlobales = data.vendedores;
+      if (data.productos) productosGlobales = data.productos;
+      if (data.config) adminConfig = data.config;
+      
+      localStorage.setItem('vendedoresGlobales', JSON.stringify(vendedoresGlobales));
+      localStorage.setItem('productosGlobales', JSON.stringify(productosGlobales));
+      localStorage.setItem('adminConfig', JSON.stringify(adminConfig));
+      
+      showNotification('✅ Datos importados correctamente');
+      location.reload();
+    } catch (error) {
+      alert('Error al importar datos: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// 7. Función para generar reporte PDF (usando jsPDF)
+function generatePDFReport(vendedorId) {
+  // Esta función requiere incluir la librería jsPDF
+  if (typeof jsPDF === 'undefined') {
+    alert('Para generar PDF, incluye la librería jsPDF');
+    return;
+  }
+  
+  const vendedor = vendedoresGlobales.find(v => v.id === vendedorId);
+  if (!vendedor) return;
+  
+  const productos = productosGlobales.filter(p => p.vendedorId === vendedorId);
+  
+  const doc = new jsPDF();
+  doc.setFontSize(20);
+  doc.text('Reporte de Vendedor - MiMarket', 20, 20);
+  
+  doc.setFontSize(12);
+  doc.text(`Nombre: ${vendedor.nombre}`, 20, 40);
+  doc.text(`Email: ${vendedor.email}`, 20, 50);
+  doc.text(`Teléfono: ${vendedor.telefono}`, 20, 60);
+  doc.text(`Ubicación: ${vendedor.provincia}, ${vendedor.distrito}`, 20, 70);
+  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 80);
+  
+  // Agregar tabla de productos
+  let y = 100;
+  productos.forEach((producto, index) => {
+    if (y > 280) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text(`${index + 1}. ${producto.nombre} - S/ ${producto.precio}`, 20, y);
+    y += 10;
+  });
+  
+  doc.save(`reporte-${vendedor.nombre}-${Date.now()}.pdf`);
+}
+
+// ========== INICIALIZACIÓN FINAL ==========
+
+// Agregar estas funciones al objeto global
+window.autoSyncPendingData = autoSyncPendingData;
+window.compressImage = compressImage;
+window.validateForm = validateForm;
+window.showDetailedStats = showDetailedStats;
+window.exportData = exportData;
+window.importData = importData;
+window.generatePDFReport = generatePDFReport;
+
+// Inicializar sincronización periódica
+setInterval(() => {
+  if (navigator.onLine && supabaseConectado) {
+    autoSyncPendingData();
+  }
+}, 5 * 60 * 1000); // Cada 5 minutos
+
+// Verificar actualizaciones cada 30 minutos
+setInterval(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update();
+    });
+  }
+}, 30 * 60 * 1000);
+
