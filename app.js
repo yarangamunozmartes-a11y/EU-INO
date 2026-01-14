@@ -1852,5 +1852,5 @@ if (isPWA) {
             estadoConexion.style.background = '#f56565';
         });
     }, 1000);
-
 });
+
