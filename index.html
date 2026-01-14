@@ -2,21 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>MiMarket - Compra y Vende en tu Zona</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Plataforma para comprar y vender productos en tu provincia y distrito">
-
-    <!-- PWA META TAGS -->
+    <title>MiMarket Perú - Marketplace Local</title>
+    
+    <!-- PWA META TAGS (CORREGIDOS) -->
     <meta name="theme-color" content="#4f46e5">
     <meta name="description" content="Compra y vende productos en tu zona - Marketplace local">
+    
+    <!-- APPLE/SAFARI TAGS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MiMarket">
     
-    <!-- ICONOS PARA IOS -->
-    <link rel="apple-touch-icon" href="icon-152x152.png">
+    <!-- ICONOS (SOLO LOS NECESARIOS) -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
     
-    <!-- MANIFEST -->
+    <!-- MANIFEST (ESTO ACTIVA LA PWA) -->
     <link rel="manifest" href="manifest.json">
     
     <link rel="stylesheet" href="style.css">
@@ -399,80 +401,11 @@
     </div>
 </div>
 
+<script src="app.js"></script>
 
-<!-- Botón de instalación PWA -->
-<div id="installPrompt" class="hidden">
-  <p>📱 Instalar MiMarket como app</p>
-  <button id="installButton" class="install-btn">Instalar</button>
-  <button id="cancelInstall" class="install-btn secondary">Ahora no</button>
-</div>
-    
-<script src="app.js">
-
-// Detectar si se puede instalar como PWA
-let deferredPrompt;
-const installPrompt = document.getElementById('installPrompt');
-const installButton = document.getElementById('installButton');
-const cancelButton = document.getElementById('cancelInstall');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevenir que Chrome muestre el prompt automático
-  e.preventDefault();
-  deferredPrompt = e;
-  
-  // Mostrar nuestro botón de instalación
-  installPrompt.classList.remove('hidden');
-  
-  // Ocultar después de 30 segundos
-  setTimeout(() => {
-    installPrompt.classList.add('hidden');
-  }, 30000);
-});
-
-installButton.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  
-  if (outcome === 'accepted') {
-    console.log('✅ Usuario instaló la PWA');
-  }
-  
-  deferredPrompt = null;
-  installPrompt.classList.add('hidden');
-});
-
-cancelButton.addEventListener('click', () => {
-  installPrompt.classList.add('hidden');
-});
-    
-// PRUEBA: Insertar un dato de prueba
-async function pruebaConexion() {
-    try {
-        const { data, error } = await db
-            .from('items')
-            .insert([{ texto: '✅ Prueba desde mi PWA' }])
-            .select();
-        
-        if (error) {
-            console.error('❌ Error:', error.message);
-            return;
-        }
-        
-        console.log('✅ Dato insertado:', data[0]);
-        alert('¡Conexión exitosa! Revisa Supabase Table Editor');
-    } catch (err) {
-        console.error('❌ Error de conexión:', err);
-    }
-}
-
-// Ejecutar al cargar la página
-document.addEventListener('DOMContentLoaded', pruebaConexion);
-
-</script>
 </body>
 </html>
+
 
 
 
