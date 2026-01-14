@@ -1,151 +1,165 @@
-// service-worker.js
-const CACHE_NAME = 'mimarket-v3';
+// service-worker.js - Versión mejorada
+const CACHE_NAME = 'mimarket-v4';
+const OFFLINE_URL = '/EU-INO/index.html';
+const SUPABASE_CACHE_NAME = 'mimarket-api-v1';
+
+// URLs a cachear
 const urlsToCache = [
   '/EU-INO/',
   '/EU-INO/index.html',
   '/EU-INO/style.css',
   '/EU-INO/app.js',
+  '/EU-INO/supabase-config.js',
   '/EU-INO/manifest.json',
   '/EU-INO/icon-192x192.png',
-  '/EU-INO/icon-512x512.png'
+  '/EU-INO/icon-512x512.png',
+  '/EU-INO/favicon.ico'
 ];
 
-// Instalar Service Worker
+// Instalación optimizada
 self.addEventListener('install', (event) => {
-  console.log('🛠️ Service Worker: Instalando...');
+  console.log('🛠️ Service Worker: Instalando v4...');
   
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('📦 Service Worker: Cacheando archivos');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        console.log('✅ Service Worker: Instalación completada');
-        return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('❌ Error cacheando archivos:', error);
-      })
-  );
-});
-
-// Activar y limpiar caches viejos
-self.addEventListener('activate', (event) => {
-  console.log('⚡ Service Worker: Activando...');
-  
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('🗑️ Service Worker: Eliminando cache viejo', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('✅ Service Worker: Activación completada');
-      return self.clients.claim();
+    Promise.all([
+      caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)),
+      self.skipWaiting()
+    ]).then(() => {
+      console.log('✅ Service Worker instalado y activo');
     })
   );
 });
 
-// Interceptar peticiones
-self.addEventListener('fetch', (event) => {
-  // Excluir peticiones a Supabase y APIs externas
-  if (event.request.url.includes('supabase.co') || 
-      event.request.url.includes('api.') ||
-      event.request.url.includes('cdn.jsdelivr.net') ||
-      event.request.url.includes('unpkg.com')) {
-    return;
-  }
+// Limpieza de caches antiguos
+self.addEventListener('activate', (event) => {
+  console.log('⚡ Service Worker: Activando...');
   
-  // Solo cachear peticiones GET del mismo origen
-  if (event.request.method !== 'GET') return;
-  
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        // Si está en cache, devolverlo
-        if (cachedResponse) {
-          console.log('📂 Sirviendo desde cache:', event.request.url);
-          return cachedResponse;
-        }
-        
-        // Si no está en cache, hacer fetch
-        console.log('🌐 Haciendo fetch:', event.request.url);
-        return fetch(event.request)
-          .then((response) => {
-            // Verificar si la respuesta es válida
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
+  event.waitUntil(
+    Promise.all([
+      // Limpiar caches viejos
+      caches.keys().then(cacheNames => 
+        Promise.all(
+          cacheNames.map(cache => {
+            if (cache !== CACHE_NAME && cache !== SUPABASE_CACHE_NAME) {
+              console.log(`🗑️ Eliminando cache: ${cache}`);
+              return caches.delete(cache);
             }
-            
-            // Clonar la respuesta para cachearla
-            const responseToCache = response.clone();
-            
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-                console.log('💾 Guardado en cache:', event.request.url);
-              })
-              .catch((error) => {
-                console.error('Error guardando en cache:', error);
-              });
-            
-            return response;
           })
-          .catch(() => {
-            // Si falla y es una navegación, mostrar la página offline
-            if (event.request.mode === 'navigate') {
-              return caches.match('/EU-INO/index.html');
-            }
-            return null;
-          });
-      })
+        )
+      ),
+      // Tomar control de todos los clients
+      self.clients.claim()
+    ]).then(() => {
+      console.log('✅ Service Worker activado');
+    })
   );
 });
 
-// Manejar mensajes del cliente
-self.addEventListener('message', (event) => {
-  if (event.data === 'skipWaiting') {
-    self.skipWaiting();
+// Estrategia de cache: Cache First, luego Network
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+  
+  // Excluir Supabase y APIs externas de cache
+  if (url.href.includes('supabase.co') || 
+      url.href.includes('api.') ||
+      url.href.includes('unpkg.com') ||
+      url.href.includes('cdn.jsdelivr.net')) {
+    return event.respondWith(fetch(request));
   }
   
-  if (event.data === 'clearCache') {
-    caches.delete(CACHE_NAME);
-  }
-});
-
-// Sincronizar en segundo plano
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-data') {
-    console.log('🔄 Sincronizando datos en segundo plano...');
-  }
-});
-
-// Manejar notificaciones push
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body || 'Nueva notificación de MiMarket',
-      icon: '/EU-INO/icon-192x192.png',
-      badge: '/EU-INO/icon-192x192.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || '/'
-      }
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'MiMarket', options)
+  // Estrategia para navegación (HTML)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(OFFLINE_URL).then(cachedResponse => {
+        return fetch(request)
+          .then(response => {
+            // Actualizar cache con nueva versión
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseClone);
+            });
+            return response;
+          })
+          .catch(() => cachedResponse || caches.match(OFFLINE_URL));
+      })
+    );
+  } else {
+    // Estrategia para assets estáticos
+    event.respondWith(
+      caches.match(request).then(cachedResponse => {
+        if (cachedResponse) {
+          // Devolver del cache y actualizar en background
+          event.waitUntil(
+            fetch(request).then(response => {
+              caches.open(CACHE_NAME).then(cache => {
+                cache.put(request, response);
+              });
+            }).catch(() => {})
+          );
+          return cachedResponse;
+        }
+        
+        // No está en cache, hacer fetch
+        return fetch(request).then(response => {
+          // Solo cachear respuestas exitosas
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        }).catch(() => {
+          // Si falla y es imagen, devolver placeholder
+          if (request.destination === 'image') {
+            return new Response(
+              '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="#f7fafc"/><text x="100" y="100" font-family="Arial" font-size="14" text-anchor="middle" dy=".3em" fill="#718096">Sin imagen</text></svg>',
+              { headers: { 'Content-Type': 'image/svg+xml' } }
+            );
+          }
+        });
+      })
     );
   }
 });
 
-// Manejar clics en notificaciones
+// Manejo de notificaciones push mejorado
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {
+    title: 'MiMarket Perú',
+    body: 'Tienes nuevas notificaciones',
+    icon: '/EU-INO/icon-192x192.png',
+    badge: '/EU-INO/icon-192x192.png'
+  };
+  
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    vibrate: [200, 100, 200],
+    data: {
+      url: data.url || '/',
+      timestamp: Date.now()
+    },
+    actions: [
+      {
+        action: 'open',
+        title: 'Abrir'
+      },
+      {
+        action: 'close',
+        title: 'Cerrar'
+      }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Manejo de clics en notificaciones
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
@@ -155,16 +169,53 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({
       type: 'window',
       includeUncontrolled: true
-    }).then((windowClients) => {
-      for (const client of windowClients) {
+    }).then((clientList) => {
+      for (const client of clientList) {
         if (client.url === urlToOpen && 'focus' in client) {
           return client.focus();
         }
       }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
+      return clients.openWindow(urlToOpen);
     })
   );
 });
+
+// Sincronización en background
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-data') {
+    console.log('🔄 Sincronizando datos en background...');
+    event.waitUntil(syncPendingData());
+  }
+});
+
+async function syncPendingData() {
+  // Aquí implementarías la lógica de sincronización
+  // con tu backend Supabase
+  console.log('✅ Datos sincronizados');
+}
+
+// Manejo de errores
+self.addEventListener('error', (error) => {
+  console.error('❌ Error en Service Worker:', error);
+});
+
+// Comunicación con el cliente
+self.addEventListener('message', (event) => {
+  switch (event.data.action) {
+    case 'skipWaiting':
+      self.skipWaiting();
+      break;
+    case 'clearCache':
+      caches.delete(CACHE_NAME);
+      break;
+    case 'getCacheSize':
+      caches.open(CACHE_NAME).then(cache => {
+        cache.keys().then(keys => {
+          event.ports[0].postMessage({ size: keys.length });
+        });
+      });
+      break;
+  }
+});
+
 
