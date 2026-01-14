@@ -403,8 +403,77 @@
 
 <script src="app.js"></script>
 
+
+
+<!-- Modal para estadísticas -->
+<div id="modal-estadisticas" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-modal" onclick="document.getElementById('modal-estadisticas').style.display='none'">&times;</span>
+    <div id="estadisticas-detalladas"></div>
+  </div>
+</div>
+
+<!-- Modal para configuración -->
+<div id="modal-config" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close-modal" onclick="document.getElementById('modal-config').style.display='none'">&times;</span>
+    <h3>⚙️ Configuración</h3>
+    
+    <div class="config-group">
+      <h4>🔄 Sincronización</h4>
+      <button onclick="autoSyncPendingData()" class="btn-secundario">Sincronizar ahora</button>
+      <p><small>Última sincronización: <span id="last-sync">Nunca</span></small></p>
+    </div>
+    
+    <div class="config-group">
+      <h4>💾 Backup de datos</h4>
+      <button onclick="exportData()" class="btn-secundario">Exportar datos</button>
+      <input type="file" id="import-file" accept=".json" style="display: none;" 
+             onchange="importData(this.files[0])">
+      <button onclick="document.getElementById('import-file').click()" class="btn-secundario">
+        Importar datos
+      </button>
+    </div>
+    
+    <div class="config-group">
+      <h4>🌙 Modo oscuro</h4>
+      <label class="switch">
+        <input type="checkbox" id="dark-mode-toggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    
+    <div class="config-group">
+      <h4>🔔 Notificaciones</h4>
+      <label>
+        <input type="checkbox" id="notifications-toggle" checked>
+        Recibir notificaciones
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- Botón flotante para configuración -->
+<button id="config-btn" style="
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 999;
+" onclick="document.getElementById('modal-config').style.display='block'">
+  ⚙️
+</button>
 </body>
 </html>
+
 
 
 
