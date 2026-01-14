@@ -881,3 +881,202 @@ button {
 .install-btn.secondary {
   background: #6b7280;
 }
+
+
+/* ========== MEJORAS ADICIONALES ========== */
+
+/* Mejoras para PWA */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .top-bar {
+    padding-top: max(15px, env(safe-area-inset-top));
+  }
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+  
+  #app {
+    background: #2d3748;
+  }
+  
+  section {
+    background: #4a5568;
+    color: #e2e8f0;
+  }
+}
+
+/* Animaciones */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.producto-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Mejoras para inputs en móviles */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important; /* Evita zoom en iOS */
+  }
+}
+
+/* Configuración */
+.config-group {
+  margin-bottom: 25px;
+  padding: 15px;
+  background: #f7fafc;
+  border-radius: 10px;
+}
+
+.config-group h4 {
+  margin-bottom: 10px;
+  color: #4a5568;
+}
+
+/* Switch para modo oscuro */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #4f46e5;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Estados de conexión */
+.status-online {
+  color: #48bb78;
+  animation: pulse 2s infinite;
+}
+
+.status-offline {
+  color: #f56565;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Código de vendedor */
+.codigo-section {
+  background: #f0f4ff;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 15px 0;
+  border-left: 4px solid #667eea;
+}
+
+.codigo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 10px 0;
+}
+
+.codigo-numero {
+  font-family: monospace;
+  font-size: 1.2rem;
+  background: #667eea;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  flex-grow: 1;
+  text-align: center;
+}
+
+.btn-copiar {
+  background: #48bb78;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-copiar:hover {
+  background: #38a169;
+}
+
+.codigo-instrucciones {
+  font-size: 0.9rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* Estados de carga */
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
