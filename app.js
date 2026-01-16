@@ -768,3 +768,74 @@ window.eliminarProducto = function(productoId) {
 };
 
 
+// ============================================
+// VERIFICACIÓN DE ICONOS PWA (PASO 6)
+// ============================================
+
+function verificarIconosPWA() {
+  console.log('🔍 Verificando iconos PWA...');
+  
+  const iconosRequeridos = [
+    { nombre: 'icon-192x192.png', tamaño: '192x192' },
+    { nombre: 'icon-512x512.png', tamaño: '512x512' }
+  ];
+  
+  let iconosFaltantes = [];
+  let verificacionesCompletadas = 0;
+  
+  iconosRequeridos.forEach(icono => {
+    const img = new Image();
+    img.onload = function() {
+      console.log(`✅ Icono encontrado: ${icono.nombre} (${icono.tamaño})`);
+      verificacionesCompletadas++;
+      
+      // Verificar dimensiones
+      if ((icono.nombre.includes('192') && (img.width !== 192 || img.height !== 192)) ||
+          (icono.nombre.includes('512') && (img.width !== 512 || img.height !== 512))) {
+        console.warn(`⚠️ Icono ${icono.nombre} tiene dimensiones incorrectas: ${img.width}x${img.height}`);
+      }
+      
+      if (verificacionesCompletadas === iconosRequeridos.length) {
+        if (iconosFaltantes.length === 0) {
+          console.log('🎉 Todos los iconos PWA están correctos');
+        } else {
+          console.error('❌ Iconos faltantes:', iconosFaltantes);
+        }
+      }
+    };
+    
+    img.onerror = function() {
+      console.error(`❌ Icono NO encontrado: ${icono.nombre}`);
+      iconosFaltantes.push(icono.nombre);
+      verificacionesCompletadas++;
+      
+      if (verificacionesCompletadas === iconosRequeridos.length && iconosFaltantes.length > 0) {
+        console.error('🚨 La PWA puede no funcionar correctamente. Iconos faltantes:', iconosFaltantes);
+        
+        // Mostrar alerta solo en desarrollo/localhost
+        if (window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.protocol === 'file:') {
+          setTimeout(() => {
+            alert(`ADVERTENCIA DE DESARROLLO:\n\nFaltan iconos para la PWA:\n${iconosFaltantes.join('\n')}\n\nLa aplicación puede no instalarse correctamente.`);
+          }, 1000);
+        }
+      }
+    };
+    
+    // Intentar cargar el icono
+    img.src = `./${icono.nombre}?v=${Date.now()}`;
+  });
+}
+
+// Ejecutar verificación después de que la app se inicialice
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(verificarIconosPWA, 2000);
+});
+
+// También verificar al hacer clic en botones de instalación
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then(verificarIconosPWA);
+}
+
+
