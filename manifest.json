@@ -1,13 +1,18 @@
 {
   "name": "MiMarket Perú",
   "short_name": "MiMarket",
-  "description": "Compra y vende productos en tu zona - Marketplace local",
+  "description": "Marketplace local para comprar y vender productos en tu zona. Conecta con vendedores locales de forma segura y rápida.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
-  "orientation": "portrait",
+  "categories": ["shopping", "business", "finance"],
+  "lang": "es-PE",
+  "dir": "ltr",
+  
   "icons": [
     {
       "src": "./icon-192x192.png",
@@ -20,9 +25,146 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple touch icon"
+    },
+    {
+      "src": "./splash-640x1136.png",
+      "sizes": "640x1136",
+      "type": "image/png",
+      "purpose": "splash screen"
     }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "./screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Pantalla de búsqueda de productos"
+    },
+    {
+      "src": "./screenshot-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Detalle de producto y contacto"
+    },
+    {
+      "src": "./screenshot-3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Panel del vendedor"
+    }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Buscar productos",
+      "short_name": "Buscar",
+      "description": "Buscar productos en tu zona",
+      "url": "./index.html#busqueda",
+      "icons": [
+        {
+          "src": "./shortcut-search.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Publicar producto",
+      "short_name": "Vender",
+      "description": "Publicar un nuevo producto",
+      "url": "./index.html#perfil-vendedor",
+      "icons": [
+        {
+          "src": "./shortcut-sell.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Mis productos",
+      "short_name": "Mis Productos",
+      "description": "Ver mis productos publicados",
+      "url": "./index.html#lista-productos",
+      "icons": [
+        {
+          "src": "./shortcut-myproducts.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  
+  "edge_side_panel": {
+    "preferred_width": 360
+  },
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+mimarket",
+      "url": "./index.html?url=%s"
+    }
+  ],
+  
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "name",
+      "text": "description",
+      "url": "link"
+    }
+  },
+  
+  "file_handlers": [
+    {
+      "action": "./index.html",
+      "accept": {
+        "image/*": [".png", ".jpg", ".jpeg", ".webp"]
+      }
+    }
+  ],
+  
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=pe.mimarket.app",
+      "id": "pe.mimarket.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/pe/app/mimarket-perú/id123456789"
+    }
+  ],
+  
+  "prefer_related_applications": false,
+  
+  "iarc_rating_id": "e4b6c2c0-1234-5678-9012-345678901234",
+  
+  "features": [
+    "Cross Platform",
+    "fast",
+    "simple",
+    "secure"
   ]
 }
+
 
 
 
