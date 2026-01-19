@@ -1080,3 +1080,46 @@ input:checked + .slider:before {
   100% { transform: rotate(360deg); }
 }
 
+/* ========== REGISTRO VENDEDOR ========== */
+#registro-vendedor form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#registro-vendedor input,
+#registro-vendedor select {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    background: white;
+}
+
+#registro-vendedor h2 {
+    text-align: center;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+#video-tutorial {
+    text-align: center;
+    padding: 30px;
+}
+
+#video-tutorial h2 {
+    color: #2d3748;
+    margin-bottom: 20px;
+}
+
+.video-placeholder {
+    background: #1a202c;
+    color: white;
+    padding: 60px 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+    font-size: 1.2rem;
+}
+
