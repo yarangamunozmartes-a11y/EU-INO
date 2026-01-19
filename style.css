@@ -1022,3 +1022,310 @@
         color: #cbd5e0;
     }
 }
+/* ========== ESTILOS BÁSICOS (AGREGAR AL INICIO) ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+#app {
+    background: white;
+    min-height: 100vh;
+    border-radius: 0;
+}
+
+/* SPLASH SCREEN */
+#splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    color: white;
+}
+
+.splash-content {
+    text-align: center;
+}
+
+.splash-content h1 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+}
+
+.splash-content p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* HEADER */
+.top-bar {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.acciones {
+    display: flex;
+    gap: 10px;
+}
+
+.acciones button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.btn-activo {
+    background: white !important;
+    color: #667eea !important;
+}
+
+/* BÚSQUEDA */
+#busqueda {
+    padding: 20px;
+}
+
+.buscador-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.buscador-header h2 {
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.subtitulo {
+    color: #718096;
+    font-size: 1rem;
+}
+
+#form-busqueda {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.input-group {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#buscar-producto {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+#buscar-producto:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.select-group {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+select {
+    flex: 1;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: white;
+}
+
+.btn-buscar {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(90deg, #48bb78, #38a169);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.btn-buscar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+}
+
+/* RESULTADOS */
+#resultados {
+    padding: 20px;
+}
+
+.mensaje-vacio {
+    text-align: center;
+    padding: 40px;
+    color: #718096;
+    font-size: 1.1rem;
+}
+
+/* BOTONES GENERALES */
+button {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* FORMULARIOS */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn-registro,
+.btn-publicar {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-secundario {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-secundario:hover {
+    background: #cbd5e0;
+}
+
+/* MODALES */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #718096;
+}
+
+.modal-botones {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-llamar {
+    background: #48bb78;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-whatsapp {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.modal-consejo {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fefcbf;
+    border-radius: 8px;
+    color: #744210;
+    font-size: 0.9rem;
+}
