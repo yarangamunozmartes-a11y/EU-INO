@@ -132,7 +132,45 @@
     </div>
 </div>
 
+<div id="installPrompt" class="hidden">
+    <p>📲 Instala MiMarket para mejor experiencia</p>
+    <button id="installButton" class="install-btn">Instalar</button>
+    <button id="cancelInstall" class="install-btn secondary">Ahora no</button>
+</div>
+
+
+// Instalación PWA
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    const installPrompt = document.getElementById('installPrompt');
+    installPrompt.classList.remove('hidden');
+    
+    document.getElementById('installButton').addEventListener('click', async () => {
+        installPrompt.classList.add('hidden');
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('PWA instalada');
+        }
+        deferredPrompt = null;
+    });
+    
+    document.getElementById('cancelInstall').addEventListener('click', () => {
+        installPrompt.classList.add('hidden');
+    });
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('PWA instalada correctamente');
+    document.getElementById('installPrompt').classList.add('hidden');
+});
+
 <script src="app.js"></script>
 </body>
 </html>
+
 
